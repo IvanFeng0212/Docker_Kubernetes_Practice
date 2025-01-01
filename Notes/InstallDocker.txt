@@ -1,0 +1,57 @@
+列出所有可用的WSL發行版
+wsl --list
+
+更新 wsl
+wsl --update
+
+安裝 Ubuntu
+wsl --install Debian
+
+查詢 Ubuntu 版本
+lsb_release -a
+
+移除 Debian
+wsl --unregister Debian
+
+進入 Debian
+wsl -d Debian
+
+更新系統
+sudo apt update
+sudo apt upgrade -y
+
+安裝必要的套件，以讓 APT 能使用 HTTPS 來獲取軟體包：
+sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release
+
+新增 Docker 的官方 GPG 金鑰：
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+設置 Docker 的穩定儲存庫：
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+更新套件列表並安裝 Docker Engine：
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io
+
+啟動 Docker 並設置開機自動啟動：
+sudo systemctl start docker
+sudo systemctl enable docker
+
+驗證 Docker 安裝：
+sudo docker version
+sudo docker run hello-world
+
+要在使用 Docker 時避免每次都需要輸入 sudo，
+可以將當前使用者添加到 Docker 群組
+
+創建 Docker 群組（如果尚未創建）
+sudo groupadd docker
+
+將當前使用者添加到 Docker 群組
+sudo usermod -aG docker $USER
+
+重新啟動系統或登出並重新登入
+sudo reboot
+
+驗證
+docker run hello-world
