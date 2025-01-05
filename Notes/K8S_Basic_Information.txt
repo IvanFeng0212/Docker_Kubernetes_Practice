@@ -1,0 +1,115 @@
+Kubernetes (K8S)
+一、主要節點與工作節點
+
+Kubernetes Cluster 包含兩類節點：主要節點 (Master Node) 和 工作節點 (Worker Node)，
+由主要節點負責整體的設定與管理，確保集群規律運作。
+
+Master Node — 主要節點
+主要節點負責管理工作節點上的容器，組織整體運作，並維持集群的穩定。
+
+主要軟體需求：
+- Kubernetes
+- CNI (Container Networking Interface)
+- etcd (Key-Value Database)
+
+核心功能：
+以控制平面 (Control Plane) 管理工作節點，包含以下 5 個關鍵組件，除 etcd 需要額外安裝，其餘包含在 Kubernetes 中：
+1. kube-apiserver (API 使服器)
+   - Kubernetes 控制平面的 API 接口。
+   - 與外部交互的橋樑，負責處理所有 REST 操作，並調度和更新 Kubernetes 狀態。
+   - 根據 kubectl 的命令執行操作。
+   
+2. kube-controller-manager (控制管理器)
+   - 統籌管理並執行控制器，確保集群期望狀態與實際狀態一致。
+   - 包括節點控制器、複製控制器等。
+   
+3. kube-scheduler (調度器)
+   - 將未綁定到節點的 Pod 分配到合適的工作節點。
+   - 基於資源需求、可用性和策略進行調度決策。
+   
+4. Cloud Controller Manager
+   - 負責與特定雲供應商整合，管理雲相關的控制循環。
+   - 例如負載均衡器、存儲和路由。
+   
+5. etcd (需另外安裝)
+   - Kubernetes 的分散式鍵值存儲，保存整個集群的所有數據。
+   - 提供後端存儲支持，保障數據一致性和可用性。
+
+Worker Node — 工作節點
+工作節點是執行容器的主要場所，由 Kubernetes 控制平面管理。
+
+主要軟體需求：
+- Kubernetes
+- CNI (Container Networking Interface)
+- Container Engine (例如 Docker、containerd、CRI-O)
+
+核心功能：
+工作節點包含以下 4 個組件：
+1. Kube-let
+   - 負責與 Kubernetes 控制平面（Control Plane）通信，根據控制平面的指令，在工作節點上運行容器。
+   - 與主要節點的 kube-scheduler 聯動，根據指令配置 Pod。
+   - 監視和上報 Pod 狀態，定期通知 kube-scheduler。
+   - 負責 Pod 的生命周期管理，確保它們按計劃運行。
+
+2. Kube Proxy
+   - 網路通訊的路由機制
+   - 節點上的網絡代理和負載平衡。
+   - 提供網絡抽象，確保 Pod 之間及 Pod 與服務之間的通信順暢。
+
+3. 容器運行時 (Container Runtime)
+   - 負責實際運行容器。
+   - 常見選項包括 Docker、containerd 和 CRI-O。
+
+4. Node Local DNS Cache (選擇性)
+   - 減少 DNS 查詢延遲，提升 DNS 查詢性能。
+
+管理員電腦需求
+   - 安裝 kubectl，通過命令行訪問主要節點，執行初始設置和調整操作。
+
+===============================================================================================
+
+二、Kubernetes 的構成與用語
+
+Kubernetes 的資源 (Resource) 種類豐富，共有 50 多種，這些資源組合使用，能靈活地支持應用程序的部署、管理和運行，
+
+實際使用中常見以下幾種核心資源：
+1. Pod
+   - Kubernetes 中最小的部署單元。
+   - 每個 Pod 至少包含一個容器，並可以選擇配置 Volume，供多個容器共享數據。
+   - Pod 通常不單獨配置 Volume，而是直接與容器綁定。
+   - 每個 Pod 會分配到一個專屬的私有 IP。
+
+2. Service
+   - 負責統籌管理 Pod，分配請求 (Request)。
+   - 作為負載平衡器，會被分配到 Cluster IP(固定位址) 給外部使用。
+   - 外部通過 Service 的 Cluster IP(固定位址) 訪問時，自動將請求分配到所管理的 Pod，就算 Pod 設置在不同的工作節點上也可以。
+   - K8S 透過其他實體負載平衡器或 Ingress (提供 HTTP/HTTPS 層面的反向代理和負載平衡功能)，分配請求 (Request)到各個 Service 。
+
+3. ReplicaSet
+   - 與 Deployment 結合使用，用於管理 Pod 的數量。
+   - 根據定義文件確保指定數量的 Pod 存在，並在 Pod 故障時自動補充。
+   - 管理下的 Pod 稱為 Replica。
+
+4. Deployment
+   - 用於管理 Pod 的部署(配置、展開)和更新。
+   - 包含映像檔 (Image) 等與 Pod 有關的詳細配置信息。
+
+5. ConfigMap
+   - 用於存儲非機密的配置數據，例如環境變數、命令行參數等。
+   - 能夠將配置與應用分離，方便後續的調整和維護。
+
+6. Secret
+   - 用於存儲機密數據，例如密碼、憑證或 Token。
+   - 提供更安全的方式管理敏感信息，並支持加密存儲。
+
+7. PersistentVolume (PV) 和 PersistentVolumeClaim (PVC)
+   - PV 是集群中已配置的存儲資源，PVC 是用戶對存儲資源的請求。
+   - 兩者結合用於管理持久化存儲，適用於需要保存數據的應用場景。
+
+8. Ingress
+   - 提供 HTTP 和 HTTPS 路由到群集中服務的能力。
+   - 通常用於管理外部訪問，支持域名路由和負載平衡。
+
+9. Namespace
+   - 用於劃分集群中的資源範圍。
+   - 支持多租戶場景，幫助隔離和管理不同團隊或項目的資源。

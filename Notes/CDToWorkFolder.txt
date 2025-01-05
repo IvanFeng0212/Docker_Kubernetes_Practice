@@ -1,0 +1,1 @@
+cd /mnt/c/Users/Public/Desktop/Backend_Practice/Docker_Kubernetes
